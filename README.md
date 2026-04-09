@@ -25,6 +25,7 @@ engr --ollama               # Ollama provider
 engr --ollama -m glm-5:cloud  # Ollama with model override
 engr --glm                    # GLM coding plan (z.ai)
 engr --kimi                   # Kimi provider (Moonshot)
+engr --openrouter             # OpenRouter provider
 engr --openai                 # OpenAI provider
 engr [any claude args]      # All other args pass through to claude
 ```
@@ -72,6 +73,17 @@ engr --kimi
 ```
 
 Uses the `kimi-k2.5` model on `api.moonshot.ai`.
+
+### OpenRouter
+
+Requires an API key:
+
+```bash
+export ENGR_OPENROUTER_API_KEY="your-key"
+engr --openrouter
+```
+
+Uses the OpenRouter SDK compatibility layer to route calls through the Claude API at `https://api.anthropic.com/v1/`.
 
 ### OpenAI
 
