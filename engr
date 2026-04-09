@@ -9,6 +9,7 @@ set -euo pipefail
 #   engr --ollama -m glm-5:cloud  # Ollama with model override
 #   engr --glm                # GLM coding plan (z.ai)
 #   engr --kimi               # Kimi provider (Moonshot)
+#   engr --openrouter         # OpenRouter provider
 #   engr [any other claude args]   # Pass-through to claude
 #   engr --install           # Install to ~/.local/bin
 #   engr --install /usr/local/bin  # Install to custom location
@@ -71,6 +72,10 @@ while [[ $# -gt 0 ]]; do
       PROVIDER="kimi"
       shift
       ;;
+    --openrouter)
+      PROVIDER="openrouter"
+      shift
+      ;;
     -m|--model)
       MODEL="$2"
       shift 2
@@ -83,6 +88,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --ollama      Use Ollama provider (requires Ollama running on localhost:11434)"
       echo "  --glm         Use GLM coding plan (z.ai, requires ENGR_ZAI_API_KEY)"
       echo "  --kimi        Use Kimi provider (Moonshot, requires ENGR_KIMI_API_KEY)"
+      echo "  --openrouter  Use OpenRouter provider (requires ENGR_OPENROUTER_API_KEY)"
       echo ""
       echo "Options:"
       echo "  --install [PATH]    Install engr to PATH (default: ~/.local/bin)"
@@ -96,6 +102,7 @@ while [[ $# -gt 0 ]]; do
       echo "  engr --ollama -m glm-5:cloud  # Ollama with model override"
       echo "  engr --glm                    # GLM coding plan"
       echo "  engr --kimi                   # Kimi provider (Moonshot)"
+      echo "  engr --openrouter             # OpenRouter provider"
       echo "  engr [any other claude args]  # Pass-through to claude"
       exit 0
       ;;
@@ -189,6 +196,20 @@ case "$PROVIDER" in
     export ANTHROPIC_DEFAULT_HAIKU_MODEL="kimi-k2.5"
     export CLAUDE_CODE_SUBAGENT_MODEL="kimi-k2.5"
     export ENABLE_TOOL_SEARCH=false
+    ;;
+  openrouter)
+    if [[ -z "${ENGR_OPENROUTER_API_KEY:-}" ]]; then
+      echo "Error: ENGR_OPENROUTER_API_KEY is not set" >&2
+      exit 1
+    fi
+    export ANTHROPIC_API_KEY=""
+    export ANTHROPIC_BASE_URL="https://openrouter.ai/api"
+    export ANTHROPIC_AUTH_TOKEN="$ENGR_OPENROUTER_API_KEY"
+    export CLAUDE_CODE_SKIP_FAST_MODE_ORG_CHECK=1
+    export ANTHROPIC_DEFAULT_OPUS_MODEL="anthropic/claude-opus-4-5"
+    export ANTHROPIC_DEFAULT_SONNET_MODEL="anthropic/claude-sonnet-4-5"
+    export ANTHROPIC_DEFAULT_HAIKU_MODEL="anthropic/claude-haiku-4-5"
+    export CLAUDE_CODE_SUBAGENT_MODEL="anthropic/claude-sonnet-4-5"
     ;;
   anthropic)
     # Default Anthropic - use whatever is already configured
