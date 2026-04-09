@@ -1,0 +1,8 @@
+Usage:
+  - engr — Anthropic (default)
+  - engr --minimax — MiniMax provider (reads ENGR_MINIMAX_API_KEY)
+  - engr --ollama — Ollama at localhost:11434
+  - engr --ollama -m glm-5:cloud — Ollama with model override
+  - engr [any args] — all other args pass through to claude
+  - engr --install — Install to ~/.local/bin
+  - engr --install /usr/local/bin — Install to custom location

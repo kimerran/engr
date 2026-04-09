@@ -1,0 +1,159 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# engr - Claude Code wrapper with provider switching
+# Usage:
+#   engr                     # Anthropic (default)
+#   engr --minimax           # MiniMax provider
+#   engr --ollama            # Ollama provider
+#   engr --ollama -m glm-5:cloud  # Ollama with model override
+#   engr [any other claude args]   # Pass-through to claude
+#   engr --install           # Install to ~/.local/bin
+#   engr --install /usr/local/bin  # Install to custom location
+#   engr --help              # Show help message
+
+PROVIDER="anthropic"
+MODEL=""
+EXTRA_ARGS=()
+
+# Installation function
+do_install() {
+  local install_dir="$1"
+  local script_dir
+  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+  echo "Installing engr to $install_dir..."
+
+  mkdir -p "$install_dir"
+  chmod +x "$script_dir/engr"
+  cp "$script_dir/engr" "$install_dir/engr"
+
+  if [[ ":$PATH:" != *":$install_dir:"* ]]; then
+    echo ""
+    echo "Warning: $install_dir is not in your PATH."
+    echo ""
+    echo "Add this to your shell config (.bashrc, .zshrc, etc):"
+    echo ""
+    echo "    export PATH=\"$install_dir:\$PATH\""
+    echo ""
+  else
+    echo "Done! Run 'engr --help' to get started."
+  fi
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --install)
+      INSTALL_DIR="${2:-}"
+      if [[ -n "$INSTALL_DIR" && "$INSTALL_DIR" != "--"* ]]; then
+        shift
+      else
+        INSTALL_DIR="$HOME/.local/bin"
+      fi
+      do_install "$INSTALL_DIR"
+      exit 0
+      ;;
+    --minimax)
+      PROVIDER="minimax"
+      shift
+      ;;
+    --ollama)
+      PROVIDER="ollama"
+      shift
+      ;;
+    -m|--model)
+      MODEL="$2"
+      shift 2
+      ;;
+    -h|--help)
+      echo "Usage: engr [provider] [options] [claude args]"
+      echo ""
+      echo "Providers:"
+      echo "  --minimax     Use MiniMax provider (requires ENGR_MINIMAX_API_KEY)"
+      echo "  --ollama      Use Ollama provider (requires Ollama running on localhost:11434)"
+      echo ""
+      echo "Options:"
+      echo "  --install [PATH]    Install engr to PATH (default: ~/.local/bin)"
+      echo "  -m, --model MODEL   Specify model to use"
+      echo "  -h, --help          Show this help message"
+      echo ""
+      echo "Examples:"
+      echo "  engr                          # Anthropic (default)"
+      echo "  engr --minimax                # MiniMax provider"
+      echo "  engr --ollama                 # Ollama provider"
+      echo "  engr --ollama -m glm-5:cloud  # Ollama with model override"
+      echo "  engr [any other claude args]  # Pass-through to claude"
+      exit 0
+      ;;
+    *)
+      EXTRA_ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+
+# Build the claude command
+CMD=(claude --dangerously-skip-permissions)
+
+if [[ -n "$MODEL" ]]; then
+  CMD+=(--model "$MODEL")
+fi
+
+CMD+=("${EXTRA_ARGS[@]}")
+
+# Set provider-specific environment and execute
+case "$PROVIDER" in
+  minimax)
+    if [[ -z "${ENGR_MINIMAX_API_KEY:-}" ]]; then
+      echo "Error: ENGR_MINIMAX_API_KEY is not set" >&2
+      exit 1
+    fi
+    unset ANTHROPIC_API_KEY
+    export ANTHROPIC_BASE_URL="https://api.minimax.io/anthropic"
+    export ANTHROPIC_AUTH_TOKEN="$ENGR_MINIMAX_API_KEY"
+    export API_TIMEOUT_MS="${API_TIMEOUT_MS:-3000000}"
+    export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+    export ANTHROPIC_MODEL="MiniMax-M2.7"
+    export ANTHROPIC_SMALL_FAST_MODEL="MiniMax-M2.7"
+    export ANTHROPIC_DEFAULT_SONNET_MODEL="MiniMax-M2.7"
+    export ANTHROPIC_DEFAULT_OPUS_MODEL="MiniMax-M2.7"
+    export ANTHROPIC_DEFAULT_HAIKU_MODEL="MiniMax-M2.7"
+    ;;
+  ollama)
+    # Start Ollama if not already running
+    if ! pgrep -x ollama >/dev/null 2>&1; then
+      echo "Starting Ollama server..."
+      nohup ollama serve >/dev/null 2>&1 &
+      # Wait for Ollama to be ready
+      for i in $(seq 1 30); do
+        if curl -sf http://localhost:11434/api/version >/dev/null 2>&1; then
+          echo "Ollama is ready."
+          break
+        fi
+        sleep 1
+      done
+      if ! curl -sf http://localhost:11434/api/version >/dev/null 2>&1; then
+        echo "Error: Ollama failed to start" >&2
+        exit 1
+      fi
+    fi
+
+    # Auto-pull model if not available locally
+    if [[ -n "$MODEL" ]]; then
+      if ! ollama list 2>/dev/null | grep -q "$MODEL"; then
+        echo "Model '$MODEL' not found locally. Pulling..."
+        ollama pull "$MODEL"
+      fi
+    fi
+
+    unset ANTHROPIC_API_KEY
+    export ANTHROPIC_AUTH_TOKEN="${ENGR_OLLAMA_CLOUD_API_KEY:-ollama}"
+    export ANTHROPIC_BASE_URL="http://localhost:11434"
+    ;;
+  anthropic)
+    # Default Anthropic - use whatever is already configured
+    unset ANTHROPIC_AUTH_TOKEN
+    ;;
+esac
+
+exec "${CMD[@]}"

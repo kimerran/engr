@@ -1,0 +1,32 @@
+#!/bin/bash
+set -e
+
+# engr installation script
+# Usage: ./install [install_location]
+# Default: ~/.local/bin
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INSTALL_DIR="${1:-$HOME/.local/bin}"
+
+echo "Installing engr to $INSTALL_DIR..."
+
+# Create install directory if it doesn't exist
+mkdir -p "$INSTALL_DIR"
+
+# Make engr executable and copy to install location
+chmod +x "$SCRIPT_DIR/engr"
+cp "$SCRIPT_DIR/engr" "$INSTALL_DIR/engr"
+
+# Check if install dir is in PATH
+if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
+    echo ""
+    echo "Warning: $INSTALL_DIR is not in your PATH."
+    echo ""
+    echo "Add this to your shell config (.bashrc, .zshrc, etc):"
+    echo ""
+    echo "    export PATH=\"$INSTALL_DIR:\$PATH\""
+    echo ""
+    echo "Then run: source ~/.bashrc  (or ~/.zshrc)"
+fi
+
+echo "Done! Run 'engr --help' to get started."
