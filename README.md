@@ -23,6 +23,8 @@ engr                        # Anthropic (default)
 engr --minimax              # MiniMax provider
 engr --ollama               # Ollama provider
 engr --ollama -m glm-5:cloud  # Ollama with model override
+engr --glm                    # GLM coding plan (z.ai)
+engr --kimi                   # Kimi provider (Moonshot)
 engr [any claude args]      # All other args pass through to claude
 ```
 
@@ -49,6 +51,26 @@ Requires [Ollama](https://ollama.com) installed. The script auto-starts the Olla
 engr --ollama                # Default model
 engr --ollama -m glm-5:cloud # Specific model
 ```
+
+### GLM coding plan (z.ai)
+
+Requires a z.ai API key:
+
+```bash
+export ENGR_ZAI_API_KEY="your-key"
+engr --glm
+```
+
+### Kimi (Moonshot)
+
+Requires a Moonshot API key:
+
+```bash
+export ENGR_KIMI_API_KEY="your-key"
+engr --kimi
+```
+
+Uses the `kimi-k2.5` model on `api.moonshot.ai`.
 
 ## Help
 
