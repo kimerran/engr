@@ -43,14 +43,15 @@ jobs:
 
       - name: Missing API key prints error and exits non-zero
         run: |
-          ! ENGR_MINIMAX_API_KEY="" ./engr --minimax 2>&1 | grep -q "ENGR_MINIMAX_API_KEY is not set"
-          ! ENGR_ZAI_API_KEY="" ./engr --glm 2>&1 | grep -q "ENGR_ZAI_API_KEY is not set"
-          ! ENGR_KIMI_API_KEY="" ./engr --kimi 2>&1 | grep -q "ENGR_KIMI_API_KEY is not set"
-          ! ENGR_OPENROUTER_API_KEY="" ./engr --openrouter 2>&1 | grep -q "ENGR_OPENROUTER_API_KEY is not set"
-          ! ENGR_OPENAI_API_KEY="" ./engr --openai 2>&1 | grep -q "ENGR_OPENAI_API_KEY is not set"
-          ! ENGR_LITELLM_API_KEY="" ./engr --litellm 2>&1 | grep -q "ENGR_LITELLM_API_KEY is not set"
-          ! ENGR_BIFROST_API_KEY="" ./engr --bifrost 2>&1 | grep -q "ENGR_BIFROST_API_KEY is not set"
-          ! ENGR_BIFROST_BASE_URL="" ENGR_BIFROST_API_KEY=set ./engr --bifrost 2>&1 | grep -q "ENGR_BIFROST_BASE_URL is not set"
+          check_error() { (eval "$1" 2>&1 || true) | grep -q "$2"; }
+          check_error 'ENGR_MINIMAX_API_KEY="" ./engr --minimax'     "ENGR_MINIMAX_API_KEY is not set"
+          check_error 'ENGR_ZAI_API_KEY="" ./engr --glm'             "ENGR_ZAI_API_KEY is not set"
+          check_error 'ENGR_KIMI_API_KEY="" ./engr --kimi'           "ENGR_KIMI_API_KEY is not set"
+          check_error 'ENGR_OPENROUTER_API_KEY="" ./engr --openrouter' "ENGR_OPENROUTER_API_KEY is not set"
+          check_error 'ENGR_OPENAI_API_KEY="" ./engr --openai'       "ENGR_OPENAI_API_KEY is not set"
+          check_error 'ENGR_LITELLM_API_KEY="" ./engr --litellm'     "ENGR_LITELLM_API_KEY is not set"
+          check_error 'ENGR_BIFROST_API_KEY="" ./engr --bifrost'     "ENGR_BIFROST_API_KEY is not set"
+          check_error 'ENGR_BIFROST_BASE_URL="" ENGR_BIFROST_API_KEY=set ./engr --bifrost' "ENGR_BIFROST_BASE_URL is not set"
 
       - name: Install copies script to target directory
         run: |
