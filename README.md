@@ -27,6 +27,7 @@ engr --glm                    # GLM coding plan (z.ai)
 engr --kimi                   # Kimi provider (Moonshot)
 engr --openrouter             # OpenRouter provider
 engr --openai                 # OpenAI provider
+engr -y                      # Skip permission prompts (yolo mode)
 engr [any claude args]      # All other args pass through to claude
 ```
 
@@ -95,6 +96,17 @@ engr --openai
 ```
 
 Uses the OpenAI SDK compatibility layer to route calls through the Claude API at `https://api.anthropic.com/v1/`.
+
+## Yolo mode
+
+By default, `engr` runs Claude Code with permission prompts enabled. Use `-y` or `--yolo` to skip all permission prompts:
+
+```bash
+engr -y                      # Skip permission prompts
+engr --yolo --openrouter     # OpenRouter + skip permissions
+```
+
+This passes `--dangerously-skip-permissions` to Claude Code. Use with caution.
 
 ## Help
 
