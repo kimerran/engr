@@ -31,7 +31,8 @@ engr --openrouter             # OpenRouter provider
 engr --openai                 # OpenAI provider
 engr --litellm                # LiteLLM proxy
 engr --bifrost                # MaximHQ Bifrost gateway
-engr [any claude args]      # All other args pass through to claude
+engr -y                       # Skip permission prompts (yolo mode)
+engr [any claude args]        # All other args pass through to claude
 ```
 
 ## Providers
@@ -137,6 +138,17 @@ Pass a model override:
 ```bash
 engr --bifrost -m anthropic/claude-sonnet-4-5
 ```
+
+## Yolo mode
+
+By default, `engr` runs Claude Code with permission prompts enabled. Use `-y` or `--yolo` to skip all permission prompts:
+
+```bash
+engr -y                      # Skip permission prompts
+engr --yolo --openrouter     # OpenRouter + skip permissions
+```
+
+This passes `--dangerously-skip-permissions` to Claude Code. Use with caution.
 
 ## Help
 
