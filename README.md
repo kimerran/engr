@@ -1,5 +1,7 @@
 # engr
 
+[![CI](https://github.com/kimerran/engr/actions/workflows/ci.yml/badge.svg)](https://github.com/kimerran/engr/actions/workflows/ci.yml)
+
 Claude Code wrapper with provider switching. Run Claude Code against Anthropic (default), MiniMax, or Ollama without manual config changes.
 
 ## Install

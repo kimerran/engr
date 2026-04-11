@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    name: Verify (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: |
+          if command -v apt-get &>/dev/null; then
+            sudo apt-get install -y shellcheck
+          else
+            brew install shellcheck
+          fi
+
+      - name: Shellcheck
+        run: shellcheck engr install
+
+      - name: Scripts are executable
+        run: |
+          test -x engr
+          test -x install
+
+      - name: Help flag exits 0
+        run: ./engr --help
+
+      - name: Help output contains expected sections
+        run: |
+          ./engr --help | grep -q "Providers:"
+          ./engr --help | grep -q "Options:"
+          ./engr --help | grep -q "Examples:"
+
+      - name: Missing API key prints error and exits non-zero
+        run: |
+          ! ENGR_MINIMAX_API_KEY="" ./engr --minimax 2>&1 | grep -q "ENGR_MINIMAX_API_KEY is not set"
+          ! ENGR_ZAI_API_KEY="" ./engr --glm 2>&1 | grep -q "ENGR_ZAI_API_KEY is not set"
+          ! ENGR_KIMI_API_KEY="" ./engr --kimi 2>&1 | grep -q "ENGR_KIMI_API_KEY is not set"
+          ! ENGR_OPENROUTER_API_KEY="" ./engr --openrouter 2>&1 | grep -q "ENGR_OPENROUTER_API_KEY is not set"
+          ! ENGR_OPENAI_API_KEY="" ./engr --openai 2>&1 | grep -q "ENGR_OPENAI_API_KEY is not set"
+          ! ENGR_LITELLM_API_KEY="" ./engr --litellm 2>&1 | grep -q "ENGR_LITELLM_API_KEY is not set"
+          ! ENGR_BIFROST_API_KEY="" ./engr --bifrost 2>&1 | grep -q "ENGR_BIFROST_API_KEY is not set"
+          ! ENGR_BIFROST_BASE_URL="" ENGR_BIFROST_API_KEY=set ./engr --bifrost 2>&1 | grep -q "ENGR_BIFROST_BASE_URL is not set"
+
+      - name: Install copies script to target directory
+        run: |
+          ./engr --install /tmp/test-bin
+          test -x /tmp/test-bin/engr
