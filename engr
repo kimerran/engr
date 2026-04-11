@@ -11,6 +11,8 @@ set -euo pipefail
 #   engr --kimi               # Kimi provider (Moonshot)
 #   engr --openrouter         # OpenRouter provider
 #   engr --openai              # OpenAI provider
+#   engr --litellm             # LiteLLM proxy
+#   engr --bifrost             # MaximHQ Bifrost gateway
 #   engr -y                    # Skip permission prompts (yolo mode)
 #   engr [any other claude args]   # Pass-through to claude
 #   engr --install           # Install to ~/.local/bin
@@ -83,6 +85,14 @@ while [[ $# -gt 0 ]]; do
       PROVIDER="openai"
       shift
       ;;
+    --litellm)
+      PROVIDER="litellm"
+      shift
+      ;;
+    --bifrost)
+      PROVIDER="bifrost"
+      shift
+      ;;
     -y|--yolo)
       SKIP_PERMISSIONS=true
       shift
@@ -101,6 +111,8 @@ while [[ $# -gt 0 ]]; do
       echo "  --kimi        Use Kimi provider (Moonshot, requires ENGR_KIMI_API_KEY)"
       echo "  --openrouter  Use OpenRouter provider (requires ENGR_OPENROUTER_API_KEY)"
       echo "  --openai      Use OpenAI provider (requires ENGR_OPENAI_API_KEY)"
+      echo "  --litellm     Use LiteLLM proxy (requires ENGR_LITELLM_API_KEY)"
+      echo "  --bifrost     Use MaximHQ Bifrost gateway (requires ENGR_BIFROST_API_KEY, ENGR_BIFROST_BASE_URL)"
       echo ""
       echo "Options:"
       echo "  --install [PATH]    Install engr to PATH (default: ~/.local/bin)"
@@ -117,6 +129,8 @@ while [[ $# -gt 0 ]]; do
       echo "  engr --kimi                   # Kimi provider (Moonshot)"
       echo "  engr --openrouter             # OpenRouter provider"
       echo "  engr --openai                # OpenAI provider"
+      echo "  engr --litellm               # LiteLLM proxy"
+      echo "  engr --bifrost               # MaximHQ Bifrost gateway"
       echo "  engr -y                      # Skip permission prompts (yolo mode)"
       echo "  engr --yolo --openrouter     # OpenRouter + skip permissions"
       echo "  engr [any other claude args]  # Pass-through to claude"
@@ -140,7 +154,7 @@ if [[ -n "$MODEL" ]]; then
   CMD+=(--model "$MODEL")
 fi
 
-CMD+=("${EXTRA_ARGS[@]}")
+CMD+=("${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"}")
 
 # Set provider-specific environment and execute
 case "$PROVIDER" in
@@ -161,12 +175,12 @@ case "$PROVIDER" in
     export ANTHROPIC_DEFAULT_HAIKU_MODEL="MiniMax-M2.7"
     ;;
   ollama)
-    # Start Ollama if not already running
-    if ! pgrep -x ollama >/dev/null 2>&1; then
+    # Start Ollama if not already running (check endpoint, pgrep -x is unreliable on macOS)
+    if ! curl -sf http://localhost:11434/api/version >/dev/null 2>&1; then
       echo "Starting Ollama server..."
       nohup ollama serve >/dev/null 2>&1 &
       # Wait for Ollama to be ready
-      for i in $(seq 1 30); do
+      for _ in $(seq 1 30); do
         if curl -sf http://localhost:11434/api/version >/dev/null 2>&1; then
           echo "Ollama is ready."
           break
@@ -239,6 +253,33 @@ case "$PROVIDER" in
     unset ANTHROPIC_API_KEY
     export ANTHROPIC_BASE_URL="https://api.anthropic.com/v1/"
     export ANTHROPIC_AUTH_TOKEN="$ENGR_OPENAI_API_KEY"
+    export API_TIMEOUT_MS="${API_TIMEOUT_MS:-300000}"
+    export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+    ;;
+  litellm)
+    BASE_URL="${ENGR_LITELLM_BASE_URL:-http://localhost:4000}"
+    if [[ -z "${ENGR_LITELLM_API_KEY:-}" ]]; then
+      echo "Error: ENGR_LITELLM_API_KEY is not set" >&2
+      exit 1
+    fi
+    unset ANTHROPIC_API_KEY
+    export ANTHROPIC_BASE_URL="$BASE_URL"
+    export ANTHROPIC_AUTH_TOKEN="$ENGR_LITELLM_API_KEY"
+    export API_TIMEOUT_MS="${API_TIMEOUT_MS:-300000}"
+    export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+    ;;
+  bifrost)
+    if [[ -z "${ENGR_BIFROST_API_KEY:-}" ]]; then
+      echo "Error: ENGR_BIFROST_API_KEY is not set" >&2
+      exit 1
+    fi
+    if [[ -z "${ENGR_BIFROST_BASE_URL:-}" ]]; then
+      echo "Error: ENGR_BIFROST_BASE_URL is not set (check your Maxim dashboard)" >&2
+      exit 1
+    fi
+    unset ANTHROPIC_API_KEY
+    export ANTHROPIC_BASE_URL="$ENGR_BIFROST_BASE_URL"
+    export ANTHROPIC_AUTH_TOKEN="$ENGR_BIFROST_API_KEY"
     export API_TIMEOUT_MS="${API_TIMEOUT_MS:-300000}"
     export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
     ;;

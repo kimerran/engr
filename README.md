@@ -1,5 +1,7 @@
 # engr
 
+[![CI](https://github.com/kimerran/engr/actions/workflows/ci.yml/badge.svg)](https://github.com/kimerran/engr/actions/workflows/ci.yml)
+
 Claude Code wrapper with provider switching. Run Claude Code against Anthropic (default), MiniMax, or Ollama without manual config changes.
 
 ## Install
@@ -27,8 +29,10 @@ engr --glm                    # GLM coding plan (z.ai)
 engr --kimi                   # Kimi provider (Moonshot)
 engr --openrouter             # OpenRouter provider
 engr --openai                 # OpenAI provider
-engr -y                      # Skip permission prompts (yolo mode)
-engr [any claude args]      # All other args pass through to claude
+engr --litellm                # LiteLLM proxy
+engr --bifrost                # MaximHQ Bifrost gateway
+engr -y                       # Skip permission prompts (yolo mode)
+engr [any claude args]        # All other args pass through to claude
 ```
 
 ## Providers
@@ -96,6 +100,44 @@ engr --openai
 ```
 
 Uses the OpenAI SDK compatibility layer to route calls through the Claude API at `https://api.anthropic.com/v1/`.
+
+### LiteLLM
+
+Requires [LiteLLM](https://github.com/BerriAI/litellm) proxy running. Set your API key and optionally the proxy URL:
+
+```bash
+export ENGR_LITELLM_API_KEY="your-master-key"
+engr --litellm
+```
+
+Defaults to `http://localhost:4000`. Override with `ENGR_LITELLM_BASE_URL`:
+
+```bash
+export ENGR_LITELLM_BASE_URL="https://litellm.mycompany.com"
+engr --litellm
+```
+
+Pass a model override:
+
+```bash
+engr --litellm -m gpt-4o
+```
+
+### MaximHQ Bifrost
+
+Requires a Maxim workspace API key and Bifrost gateway URL:
+
+```bash
+export ENGR_BIFROST_API_KEY="maxim-xxxx"
+export ENGR_BIFROST_BASE_URL="https://<your-workspace>.bifrost.getmaxim.ai"
+engr --bifrost
+```
+
+Pass a model override:
+
+```bash
+engr --bifrost -m anthropic/claude-sonnet-4-5
+```
 
 ## Yolo mode
 
