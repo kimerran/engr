@@ -18,6 +18,13 @@ Installs to `~/.local/bin` by default. Pass a different path:
 
 If the install directory isn't in your PATH, the script will print the line to add to your shell config.
 
+Creates a `ccx` alias symlink, so you can use either `engr` or `ccx`:
+
+```bash
+ccx --minimax        # Same as engr --minimax
+ccx -yt              # Same as engr -yt
+```
+
 ## Usage
 
 ```bash

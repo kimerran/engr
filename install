@@ -17,6 +17,9 @@ mkdir -p "$INSTALL_DIR"
 chmod +x "$SCRIPT_DIR/engr"
 cp "$SCRIPT_DIR/engr" "$INSTALL_DIR/engr"
 
+# Create 'ccx' alias symlink
+ln -sf "$INSTALL_DIR/engr" "$INSTALL_DIR/ccx"
+
 # Check if install dir is in PATH
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
     echo ""
@@ -29,4 +32,4 @@ if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
     echo "Then run: source ~/.bashrc  (or ~/.zshrc)"
 fi
 
-echo "Done! Run 'engr --help' to get started."
+echo "Done! Run 'engr --help' or 'ccx --help' to get started."
