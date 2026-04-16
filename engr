@@ -17,11 +17,13 @@ set -euo pipefail
 #   engr [any other claude args]   # Pass-through to claude
 #   engr --install           # Install to ~/.local/bin
 #   engr --install /usr/local/bin  # Install to custom location
+#   engr claude update       # Run 'claude update' to update Claude Code
 #   engr --help              # Show help message
 
 PROVIDER="anthropic"
 MODEL=""
 SKIP_PERMISSIONS=false
+THINKING_DISPLAY=false
 EXTRA_ARGS=()
 
 # Installation function
@@ -97,6 +99,24 @@ while [[ $# -gt 0 ]]; do
       SKIP_PERMISSIONS=true
       shift
       ;;
+    -t|--thinking)
+      THINKING_DISPLAY=true
+      shift
+      ;;
+    -[yt]*)
+      # Handle combined short flags like -yt or -ty
+      for (( i=1; i<${#1}; i++ )); do
+        case "${1:$i:1}" in
+          y) SKIP_PERMISSIONS=true ;;
+          t) THINKING_DISPLAY=true ;;
+          *)
+            echo "Unknown flag: -${1:$i:1}" >&2
+            exit 1
+            ;;
+        esac
+      done
+      shift
+      ;;
     -m|--model)
       MODEL="$2"
       shift 2
@@ -114,10 +134,14 @@ while [[ $# -gt 0 ]]; do
       echo "  --litellm     Use LiteLLM proxy (requires ENGR_LITELLM_API_KEY)"
       echo "  --bifrost     Use MaximHQ Bifrost gateway (requires ENGR_BIFROST_API_KEY, ENGR_BIFROST_BASE_URL)"
       echo ""
-      echo "Options:"
+      echo "Commands:"
       echo "  --install [PATH]    Install engr to PATH (default: ~/.local/bin)"
+      echo "  claude update       Update Claude Code to the latest version"
+      echo ""
+      echo "Options:"
       echo "  -m, --model MODEL   Specify model to use"
       echo "  -y, --yolo          Skip all permission prompts (--dangerously-skip-permissions)"
+      echo "  -t, --thinking      Enable summarized thinking display (--thinking-display summarized)"
       echo "  -h, --help          Show this help message"
       echo ""
       echo "Examples:"
@@ -132,9 +156,19 @@ while [[ $# -gt 0 ]]; do
       echo "  engr --litellm               # LiteLLM proxy"
       echo "  engr --bifrost               # MaximHQ Bifrost gateway"
       echo "  engr -y                      # Skip permission prompts (yolo mode)"
+      echo "  engr -t                      # Enable thinking display"
+      echo "  engr -yt                     # Combined: yolo + thinking display"
       echo "  engr --yolo --openrouter     # OpenRouter + skip permissions"
+      echo "  engr claude update           # Update Claude Code"
       echo "  engr [any other claude args]  # Pass-through to claude"
       exit 0
+      ;;
+    claude)
+      if [[ "${2:-}" == "update" ]]; then
+        exec claude update
+      fi
+      EXTRA_ARGS+=("$1")
+      shift
       ;;
     *)
       EXTRA_ARGS+=("$1")
@@ -148,6 +182,10 @@ CMD=(claude)
 
 if [[ "$SKIP_PERMISSIONS" == "true" ]]; then
   CMD+=(--dangerously-skip-permissions)
+fi
+
+if [[ "$THINKING_DISPLAY" == "true" ]]; then
+  CMD+=(--thinking-display summarized)
 fi
 
 if [[ -n "$MODEL" ]]; then

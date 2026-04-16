@@ -32,6 +32,9 @@ engr --openai                 # OpenAI provider
 engr --litellm                # LiteLLM proxy
 engr --bifrost                # MaximHQ Bifrost gateway
 engr -y                       # Skip permission prompts (yolo mode)
+engr -t                       # Enable thinking display
+engr -yt                      # Combined: yolo + thinking display
+engr claude update           # Update Claude Code to latest version
 engr [any claude args]        # All other args pass through to claude
 ```
 
@@ -149,6 +152,17 @@ engr --yolo --openrouter     # OpenRouter + skip permissions
 ```
 
 This passes `--dangerously-skip-permissions` to Claude Code. Use with caution.
+
+## Thinking display
+
+Use `-t` or `--thinking` to enable summarized thinking display:
+
+```bash
+engr -t                      # Enable thinking display
+engr -yt                     # Yolo + thinking display combined
+```
+
+This passes `--thinking-display summarized` to Claude Code.
 
 ## Help
 
