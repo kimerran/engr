@@ -13,6 +13,7 @@ set -euo pipefail
 #   engr --openai              # OpenAI provider
 #   engr --litellm             # LiteLLM proxy
 #   engr --bifrost             # MaximHQ Bifrost gateway
+#   engr --opencode            # OpenCode (MiniMax via OpenCode Zen)
 #   engr -y                    # Skip permission prompts (yolo mode)
 #   engr [any other claude args]   # Pass-through to claude
 #   engr --install           # Install to ~/.local/bin
@@ -98,6 +99,10 @@ while [[ $# -gt 0 ]]; do
       PROVIDER="bifrost"
       shift
       ;;
+    --opencode)
+      PROVIDER="opencode"
+      shift
+      ;;
     -y|--yolo)
       SKIP_PERMISSIONS=true
       shift
@@ -136,6 +141,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --openai      Use OpenAI provider (requires ENGR_OPENAI_API_KEY)"
       echo "  --litellm     Use LiteLLM proxy (requires ENGR_LITELLM_API_KEY)"
       echo "  --bifrost     Use MaximHQ Bifrost gateway (requires ENGR_BIFROST_API_KEY, ENGR_BIFROST_BASE_URL)"
+      echo "  --opencode    Use OpenCode (MiniMax via OpenCode Zen, requires ENGR_OPENCODE_API_KEY)"
       echo ""
       echo "Commands:"
       echo "  --install [PATH]    Install engr to PATH (default: ~/.local/bin)"
@@ -158,6 +164,7 @@ while [[ $# -gt 0 ]]; do
       echo "  engr --openai                # OpenAI provider"
       echo "  engr --litellm               # LiteLLM proxy"
       echo "  engr --bifrost               # MaximHQ Bifrost gateway"
+      echo "  engr --opencode              # OpenCode (MiniMax via OpenCode Zen)"
       echo "  engr -y                      # Skip permission prompts (yolo mode)"
       echo "  engr -t                      # Enable thinking display"
       echo "  engr -yt                     # Combined: yolo + thinking display"
@@ -323,6 +330,22 @@ case "$PROVIDER" in
     export ANTHROPIC_AUTH_TOKEN="$ENGR_BIFROST_API_KEY"
     export API_TIMEOUT_MS="${API_TIMEOUT_MS:-300000}"
     export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+    ;;
+  opencode)
+    if [[ -z "${ENGR_OPENCODE_API_KEY:-}" ]]; then
+      echo "Error: ENGR_OPENCODE_API_KEY is not set" >&2
+      exit 1
+    fi
+    unset ANTHROPIC_API_KEY
+    export ANTHROPIC_BASE_URL="https://opencode.ai/zen/go"
+    export ANTHROPIC_AUTH_TOKEN="$ENGR_OPENCODE_API_KEY"
+    export API_TIMEOUT_MS="${API_TIMEOUT_MS:-3000000}"
+    export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+    export ANTHROPIC_MODEL="minimax-m2.7"
+    export ANTHROPIC_SMALL_FAST_MODEL="minimax-m2.7"
+    export ANTHROPIC_DEFAULT_SONNET_MODEL="minimax-m2.7"
+    export ANTHROPIC_DEFAULT_OPUS_MODEL="minimax-m2.7"
+    export ANTHROPIC_DEFAULT_HAIKU_MODEL="minimax-m2.7"
     ;;
   anthropic)
     # Default Anthropic - use whatever is already configured

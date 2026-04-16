@@ -48,6 +48,7 @@ engr --openrouter             # OpenRouter provider
 engr --openai                 # OpenAI provider
 engr --litellm                # LiteLLM proxy
 engr --bifrost                # MaximHQ Bifrost gateway
+engr --opencode               # OpenCode (MiniMax via OpenCode Zen)
 engr -y                       # Skip permission prompts (yolo mode)
 engr -t                       # Enable thinking display
 engr -yt                      # Combined: yolo + thinking display
@@ -158,6 +159,17 @@ Pass a model override:
 ```bash
 engr --bifrost -m anthropic/claude-sonnet-4-5
 ```
+
+### OpenCode (MiniMax)
+
+Requires an [OpenCode Zen](https://opencode.ai/auth) API key:
+
+```bash
+export ENGR_OPENCODE_API_KEY="your-opencode-key"
+engr --opencode
+```
+
+Uses MiniMax models served via OpenCode's Anthropic-compatible endpoint.
 
 ## Yolo mode
 
