@@ -6,14 +6,24 @@ Claude Code wrapper with provider switching. Run Claude Code against Anthropic (
 
 ## Install
 
+**One-liner (recommended):**
+
 ```bash
-./install
+curl -fsSL https://raw.githubusercontent.com/kimerran/engr/main/engr | bash -s -- --install
 ```
 
-Installs to `~/.local/bin` by default. Pass a different path:
+Installs to `~/.local/bin` by default. Pass a custom path:
 
 ```bash
-./install /usr/local/bin
+curl -fsSL https://raw.githubusercontent.com/kimerran/engr/main/engr | bash -s -- --install /usr/local/bin
+```
+
+**From source:**
+
+```bash
+git clone https://github.com/kimerran/engr.git
+cd engr
+./install
 ```
 
 If the install directory isn't in your PATH, the script will print the line to add to your shell config.
