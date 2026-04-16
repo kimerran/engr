@@ -38,6 +38,9 @@ do_install() {
   chmod +x "$script_dir/engr"
   cp "$script_dir/engr" "$install_dir/engr"
 
+  # Create 'ccx' alias symlink
+  ln -sf "$install_dir/engr" "$install_dir/ccx"
+
   if [[ ":$PATH:" != *":$install_dir:"* ]]; then
     echo ""
     echo "Warning: $install_dir is not in your PATH."
@@ -47,7 +50,7 @@ do_install() {
     echo "    export PATH=\"$install_dir:\$PATH\""
     echo ""
   else
-    echo "Done! Run 'engr --help' to get started."
+    echo "Done! Run 'engr --help' or 'ccx --help' to get started."
   fi
 }
 
