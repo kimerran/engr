@@ -43,7 +43,7 @@ engr --minimax              # MiniMax provider
 engr --ollama               # Ollama provider
 engr --ollama -m glm-5:cloud  # Ollama with model override
 engr --glm                    # GLM coding plan (z.ai)
-engr --kimi                   # Kimi provider (Moonshot)
+engr --kimi                   # Kimi provider
 engr --openrouter             # OpenRouter provider
 engr --openai                 # OpenAI provider
 engr --litellm                # LiteLLM proxy
@@ -89,16 +89,21 @@ export ENGR_ZAI_API_KEY="your-key"
 engr --glm
 ```
 
-### Kimi (Moonshot)
+### Kimi
 
-Requires a Moonshot API key:
+Requires a Kimi API key:
 
 ```bash
 export ENGR_KIMI_API_KEY="your-key"
 engr --kimi
 ```
 
-Uses the `kimi-k2.5` model on `api.moonshot.ai`.
+Uses the `kimi-k2.6` model on `api.kimi.com`. Override the defaults with:
+
+```bash
+export ENGR_KIMI_MODEL="kimi-k2.5"                  # default: kimi-k2.6
+export ENGR_KIMI_BASE_URL="https://api.moonshot.ai/anthropic"  # default: https://api.kimi.com/coding/
+```
 
 ### OpenRouter
 

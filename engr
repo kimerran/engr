@@ -8,7 +8,7 @@ set -euo pipefail
 #   engr --ollama            # Ollama provider
 #   engr --ollama -m glm-5:cloud  # Ollama with model override
 #   engr --glm                # GLM coding plan (z.ai)
-#   engr --kimi               # Kimi provider (Moonshot)
+#   engr --kimi               # Kimi provider
 #   engr --openrouter         # OpenRouter provider
 #   engr --openai              # OpenAI provider
 #   engr --litellm             # LiteLLM proxy
@@ -136,7 +136,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --minimax     Use MiniMax provider (requires ENGR_MINIMAX_API_KEY)"
       echo "  --ollama      Use Ollama provider (requires Ollama running on localhost:11434)"
       echo "  --glm         Use GLM coding plan (z.ai, requires ENGR_ZAI_API_KEY)"
-      echo "  --kimi        Use Kimi provider (Moonshot, requires ENGR_KIMI_API_KEY)"
+      echo "  --kimi        Use Kimi provider (requires ENGR_KIMI_API_KEY)"
       echo "  --openrouter  Use OpenRouter provider (requires ENGR_OPENROUTER_API_KEY)"
       echo "  --openai      Use OpenAI provider (requires ENGR_OPENAI_API_KEY)"
       echo "  --litellm     Use LiteLLM proxy (requires ENGR_LITELLM_API_KEY)"
@@ -159,7 +159,7 @@ while [[ $# -gt 0 ]]; do
       echo "  engr --ollama                 # Ollama provider"
       echo "  engr --ollama -m glm-5:cloud  # Ollama with model override"
       echo "  engr --glm                    # GLM coding plan"
-      echo "  engr --kimi                   # Kimi provider (Moonshot)"
+      echo "  engr --kimi                   # Kimi provider"
       echo "  engr --openrouter             # OpenRouter provider"
       echo "  engr --openai                # OpenAI provider"
       echo "  engr --litellm               # LiteLLM proxy"
@@ -268,15 +268,16 @@ case "$PROVIDER" in
       echo "Error: ENGR_KIMI_API_KEY is not set" >&2
       exit 1
     fi
+    KIMI_MODEL="${ENGR_KIMI_MODEL:-kimi-k2.6}"
     unset ANTHROPIC_API_KEY
     export ANTHROPIC_AUTH_TOKEN="$ENGR_KIMI_API_KEY"
-    export ANTHROPIC_BASE_URL="https://api.moonshot.ai/anthropic"
-    export ANTHROPIC_MODEL="kimi-k2.5"
-    export ANTHROPIC_SMALL_FAST_MODEL="kimi-k2.5"
-    export ANTHROPIC_DEFAULT_SONNET_MODEL="kimi-k2.5"
-    export ANTHROPIC_DEFAULT_OPUS_MODEL="kimi-k2.5"
-    export ANTHROPIC_DEFAULT_HAIKU_MODEL="kimi-k2.5"
-    export CLAUDE_CODE_SUBAGENT_MODEL="kimi-k2.5"
+    export ANTHROPIC_BASE_URL="${ENGR_KIMI_BASE_URL:-https://api.kimi.com/coding/}"
+    export ANTHROPIC_MODEL="$KIMI_MODEL"
+    export ANTHROPIC_SMALL_FAST_MODEL="$KIMI_MODEL"
+    export ANTHROPIC_DEFAULT_SONNET_MODEL="$KIMI_MODEL"
+    export ANTHROPIC_DEFAULT_OPUS_MODEL="$KIMI_MODEL"
+    export ANTHROPIC_DEFAULT_HAIKU_MODEL="$KIMI_MODEL"
+    export CLAUDE_CODE_SUBAGENT_MODEL="$KIMI_MODEL"
     export ENABLE_TOOL_SEARCH=false
     ;;
   openrouter)
