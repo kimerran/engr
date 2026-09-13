@@ -40,8 +40,8 @@ ccx -yt              # Same as engr -yt
 ```bash
 engr                        # Anthropic (default)
 engr --minimax              # MiniMax provider
-engr --ollama               # Ollama provider
-engr --ollama -m glm-5:cloud  # Ollama with model override
+engr --ollama               # Ollama Cloud provider
+engr --ollama -m glm-5:cloud  # Ollama Cloud with model override
 engr --glm                    # GLM coding plan (z.ai)
 engr --kimi                   # Kimi provider
 engr --openrouter             # OpenRouter provider
@@ -73,11 +73,19 @@ engr --minimax
 
 ### Ollama
 
-Requires [Ollama](https://ollama.com) installed. The script auto-starts the Ollama server and pulls the model if not found locally.
+Uses [Ollama Cloud](https://ollama.com) (`https://ollama.com`). Requires an API key:
 
 ```bash
-engr --ollama                # Default model
+export ENGR_OLLAMA_API_KEY="your-key"   # OLLAMA_API_KEY is also accepted
+engr --ollama                # Default model (gpt-oss:120b)
 engr --ollama -m glm-5:cloud # Specific model
+```
+
+Override the defaults with:
+
+```bash
+export ENGR_OLLAMA_MODEL="glm-5:cloud"                 # default: gpt-oss:120b
+export ENGR_OLLAMA_BASE_URL="http://localhost:11434"   # default: https://ollama.com (use this for a local server)
 ```
 
 ### GLM coding plan (z.ai)

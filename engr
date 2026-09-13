@@ -5,8 +5,8 @@ set -euo pipefail
 # Usage:
 #   engr                     # Anthropic (default)
 #   engr --minimax           # MiniMax provider
-#   engr --ollama            # Ollama provider
-#   engr --ollama -m glm-5:cloud  # Ollama with model override
+#   engr --ollama            # Ollama Cloud provider
+#   engr --ollama -m glm-5:cloud  # Ollama Cloud with model override
 #   engr --glm                # GLM coding plan (z.ai)
 #   engr --kimi               # Kimi provider
 #   engr --openrouter         # OpenRouter provider
@@ -134,7 +134,7 @@ while [[ $# -gt 0 ]]; do
       echo ""
       echo "Providers:"
       echo "  --minimax     Use MiniMax provider (requires ENGR_MINIMAX_API_KEY)"
-      echo "  --ollama      Use Ollama provider (requires Ollama running on localhost:11434)"
+      echo "  --ollama      Use Ollama Cloud provider (requires ENGR_OLLAMA_API_KEY)"
       echo "  --glm         Use GLM coding plan (z.ai, requires ENGR_ZAI_API_KEY)"
       echo "  --kimi        Use Kimi provider (requires ENGR_KIMI_API_KEY)"
       echo "  --openrouter  Use OpenRouter provider (requires ENGR_OPENROUTER_API_KEY)"
@@ -156,8 +156,8 @@ while [[ $# -gt 0 ]]; do
       echo "Examples:"
       echo "  engr                          # Anthropic (default)"
       echo "  engr --minimax                # MiniMax provider"
-      echo "  engr --ollama                 # Ollama provider"
-      echo "  engr --ollama -m glm-5:cloud  # Ollama with model override"
+      echo "  engr --ollama                 # Ollama Cloud provider"
+      echo "  engr --ollama -m glm-5:cloud  # Ollama Cloud with model override"
       echo "  engr --glm                    # GLM coding plan"
       echo "  engr --kimi                   # Kimi provider"
       echo "  engr --openrouter             # OpenRouter provider"
@@ -223,35 +223,23 @@ case "$PROVIDER" in
     export ANTHROPIC_DEFAULT_HAIKU_MODEL="MiniMax-M2.7"
     ;;
   ollama)
-    # Start Ollama if not already running (check endpoint, pgrep -x is unreliable on macOS)
-    if ! curl -sf http://localhost:11434/api/version >/dev/null 2>&1; then
-      echo "Starting Ollama server..."
-      nohup ollama serve >/dev/null 2>&1 &
-      # Wait for Ollama to be ready
-      for _ in $(seq 1 30); do
-        if curl -sf http://localhost:11434/api/version >/dev/null 2>&1; then
-          echo "Ollama is ready."
-          break
-        fi
-        sleep 1
-      done
-      if ! curl -sf http://localhost:11434/api/version >/dev/null 2>&1; then
-        echo "Error: Ollama failed to start" >&2
-        exit 1
-      fi
+    OLLAMA_KEY="${ENGR_OLLAMA_API_KEY:-${OLLAMA_API_KEY:-}}"
+    if [[ -z "$OLLAMA_KEY" ]]; then
+      echo "Error: ENGR_OLLAMA_API_KEY is not set" >&2
+      exit 1
     fi
-
-    # Auto-pull model if not available locally
-    if [[ -n "$MODEL" ]]; then
-      if ! ollama list 2>/dev/null | grep -q "$MODEL"; then
-        echo "Model '$MODEL' not found locally. Pulling..."
-        ollama pull "$MODEL"
-      fi
-    fi
-
+    OLLAMA_MODEL="${ENGR_OLLAMA_MODEL:-gpt-oss:120b}"
     unset ANTHROPIC_API_KEY
-    export ANTHROPIC_AUTH_TOKEN="${ENGR_OLLAMA_CLOUD_API_KEY:-ollama}"
-    export ANTHROPIC_BASE_URL="http://localhost:11434"
+    export ANTHROPIC_AUTH_TOKEN="$OLLAMA_KEY"
+    export ANTHROPIC_BASE_URL="${ENGR_OLLAMA_BASE_URL:-https://ollama.com}"
+    export API_TIMEOUT_MS="${API_TIMEOUT_MS:-3000000}"
+    export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+    export ANTHROPIC_MODEL="$OLLAMA_MODEL"
+    export ANTHROPIC_SMALL_FAST_MODEL="$OLLAMA_MODEL"
+    export ANTHROPIC_DEFAULT_SONNET_MODEL="$OLLAMA_MODEL"
+    export ANTHROPIC_DEFAULT_OPUS_MODEL="$OLLAMA_MODEL"
+    export ANTHROPIC_DEFAULT_HAIKU_MODEL="$OLLAMA_MODEL"
+    export CLAUDE_CODE_SUBAGENT_MODEL="$OLLAMA_MODEL"
     ;;
   glm)
     if [[ -z "${ENGR_ZAI_API_KEY:-}" ]]; then
